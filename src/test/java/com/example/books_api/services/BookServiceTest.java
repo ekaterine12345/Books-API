@@ -34,12 +34,6 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class BookServiceTest {
 
-//    @AfterEach
-//    void clearSecurityContext() {
-//        SecurityContextHolder.clearContext();
-//    }
-
-
     @Mock
     private BookRepository bookRepository;
 
