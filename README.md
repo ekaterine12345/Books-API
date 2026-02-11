@@ -13,3 +13,15 @@ user can:
 * delete book from cart
 * deleting every book from cart
 * purchase books from cart
+
+
+### Used Technologies
+* Java + Spring Boot
+* Spring Data JPA
+* Hibernate
+* MySQL
+* Spring Security
+* JWT
+* lombok
+* swagger
+* mapstruct
