@@ -83,6 +83,7 @@ public class User extends BaseEntity<Long> implements UserDetails {
     @JoinTable(name = "user_purchases", joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "book_id"))
     @JsonIgnore
+    @Builder.Default
     private List<Book> purchasedBooks = new ArrayList<>();
 
 

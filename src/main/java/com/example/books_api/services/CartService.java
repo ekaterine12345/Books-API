@@ -1,5 +1,6 @@
 package com.example.books_api.services;
 
+import com.example.books_api.config.SecurityService;
 import com.example.books_api.dtos.ApiResponse;
 import com.example.books_api.dtos.CartItemResponseDto;
 import com.example.books_api.dtos.CartResponseDto;
@@ -26,10 +27,12 @@ public class CartService {
     private final BookRepository bookRepository;
     private final UserRepository userRepository;
 
+    private final SecurityService securityService;
+
 
     public ApiResponse addToCart(Long bookId) {
         // 1. Get current user
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        String email = securityService.getCurrentUserEmail();   // SecurityContextHolder.getContext().getAuthentication().getName();
 
         Cart cart = cartRepository.findByUserEmail(email)
                 .orElseThrow(() -> new RuntimeException("Cart was not found"));
@@ -63,18 +66,22 @@ public class CartService {
 
     public ApiResponse deleteFromCart(Long bookId) {
 
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        String email = securityService.getCurrentUserEmail();
         Cart cart = cartRepository.findByUserEmail(email)
                 .orElseThrow(() -> new RuntimeException("Cart not found"));
 
-        cart.getItems().removeIf(i -> i.getBook().getId().equals(bookId));
-        cartRepository.save(cart);
+        boolean removed = cart.getItems().removeIf(i -> i.getBook().getId().equals(bookId));
 
+
+        if (!removed) {
+            throw new RuntimeException("Book with ID " + bookId + " was not found in your cart");
+        }
+        cartRepository.save(cart);
         return new ApiResponse("Book removed from cart with id", bookId);
     }
 
     public ApiResponse clearCart() {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        String email = securityService.getCurrentUserEmail();
         Cart cart = cartRepository.findByUserEmail(email)
                 .orElseThrow(() -> new RuntimeException("Cart not found"));
 
@@ -85,7 +92,7 @@ public class CartService {
     }
 
     public ApiResponse getAllCart() {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        String email = securityService.getCurrentUserEmail();
         Cart cart = cartRepository.findByUserEmail(email)
                 .orElseThrow(() -> new RuntimeException("Cart not found"));
 
@@ -104,7 +111,7 @@ public class CartService {
 
     @Transactional
     public ApiResponse purchaseFromCart(){
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        String email = securityService.getCurrentUserEmail();
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));

@@ -1,5 +1,6 @@
 package com.example.books_api.services;
 
+import com.example.books_api.config.SecurityService;
 import com.example.books_api.mapper.BookMapper;
 import com.example.books_api.dtos.ApiResponse;
 import com.example.books_api.dtos.BookDto;
@@ -19,16 +20,20 @@ public class UserService {
     private final UserRepository userRepository;
     private final BookMapper bookMapper;
 
+    private final SecurityService securityService;
+
     @Autowired
-    public UserService(BookRepository bookRepository, UserRepository userRepository, BookMapper bookMapper) {
+    public UserService(BookRepository bookRepository, UserRepository userRepository,
+                       BookMapper bookMapper, SecurityService securityService) {
         this.bookRepository = bookRepository;
         this.userRepository = userRepository;
         this.bookMapper = bookMapper;
+        this.securityService = securityService;
     }
 
     public ApiResponse getPurchasedBooks() {
         // 1. Get current user
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        String email = securityService.getCurrentUserEmail();
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -36,23 +41,4 @@ public class UserService {
                 .stream().map(bookMapper::toDto).collect(Collectors.toList());
         return new ApiResponse(user.getFirstname() + "'s purchased books", purchasedBooks);
     }
-
-
-//    public void purchaseBook(Long bookId) {
-
-//
-//        // 2. Get the book
-//        Book book = bookRepository.findById(bookId)
-//                .orElseThrow(() -> new RuntimeException("Book not found"));
-//
-//        // 3. Check if already purchased to avoid duplicates
-//        if (!user.getPurchasedBooks().contains(book)) {
-//            user.getPurchasedBooks().add(book);
-//            userRepository.save(user); // Save the relationship in the join table
-//        }
-//    }
-
-
-
-
 }

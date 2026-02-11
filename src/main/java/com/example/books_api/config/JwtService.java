@@ -37,8 +37,12 @@ public class JwtService {
     }
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
-        final String username = extractUsername(token);
-        return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
+        try {
+            final String username = extractUsername(token);
+            return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     private boolean isTokenExpired(String token) {
@@ -54,12 +58,25 @@ public class JwtService {
         return claimsResolver.apply(claims);
     }
 
-    private Claims extractAllClaims(String token){
-        return Jwts.parser()// parseBuilder?
-                .verifyWith(getSingInKey()) // setSigningKey
-                .build()
-                .parseSignedClaims(token)// parseClaimsJws
-                .getPayload(); // getBody
+//    private Claims extractAllClaims(String token){
+//        return Jwts.parser()
+//                .verifyWith(getSingInKey())
+//                .build()
+//                .parseSignedClaims(token)
+//                .getPayload();
+//    }
+
+    private Claims extractAllClaims(String token) {
+        try {
+            return Jwts.parser()
+                    .verifyWith(getSingInKey())
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+        } catch (io.jsonwebtoken.JwtException | IllegalArgumentException e) {
+            // Log the reason why the token failed if you want
+            throw new RuntimeException("Invalid JWT token: " + e.getMessage());
+        }
     }
 
     private SecretKey getSingInKey() {

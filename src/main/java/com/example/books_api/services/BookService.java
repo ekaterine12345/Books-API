@@ -1,6 +1,7 @@
 package com.example.books_api.services;
 
 
+import com.example.books_api.config.SecurityService;
 import com.example.books_api.dtos.ApiResponse;
 import com.example.books_api.dtos.BookDto;
 import com.example.books_api.entities.Book;
@@ -20,11 +21,16 @@ public class BookService {
     private final BookMapper bookMapper;
     private final UserRepository userRepository;
 
+    private final SecurityService securityService;
+
+
     @Autowired
-    public BookService(BookRepository bookRepository, BookMapper bookMapper, UserRepository userRepository) {
+    public BookService(BookRepository bookRepository, BookMapper bookMapper,
+                       UserRepository userRepository, SecurityService securityService) {
         this.bookRepository = bookRepository;
         this.bookMapper = bookMapper;
         this.userRepository = userRepository;
+        this.securityService = securityService;
     }
 
     
@@ -40,7 +46,7 @@ public class BookService {
 
     public ApiResponse purchaseBook(Long bookId) {
         // Getting the  current user
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        String email = securityService.getCurrentUserEmail();  //SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -58,7 +64,7 @@ public class BookService {
     }
 
     public ResponseEntity<String> downloadBook(Long id) {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        String email = securityService.getCurrentUserEmail();
         User user = userRepository.findByEmail(email).get();
         Book book = bookRepository.findById(id).get();
 
