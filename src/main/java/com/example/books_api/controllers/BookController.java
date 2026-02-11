@@ -1,6 +1,5 @@
 package com.example.books_api.controllers;
 
-import com.example.books_api.BookMapper;
 import com.example.books_api.dtos.ApiResponse;
 import com.example.books_api.dtos.BookDto;
 import com.example.books_api.services.BookService;

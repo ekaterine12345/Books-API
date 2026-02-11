@@ -1,4 +1,4 @@
-package com.example.books_api;
+package com.example.books_api.mapper;
 
 import com.example.books_api.dtos.BookDto;
 import com.example.books_api.entities.Book;

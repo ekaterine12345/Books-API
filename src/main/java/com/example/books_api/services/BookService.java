@@ -1,10 +1,11 @@
 package com.example.books_api.services;
 
-import com.example.books_api.BookMapper;
+
 import com.example.books_api.dtos.ApiResponse;
 import com.example.books_api.dtos.BookDto;
 import com.example.books_api.entities.Book;
 import com.example.books_api.entities.User;
+import com.example.books_api.mapper.BookMapper;
 import com.example.books_api.respsitories.BookRepository;
 import com.example.books_api.respsitories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +13,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
 
 @Service
 public class BookService {
