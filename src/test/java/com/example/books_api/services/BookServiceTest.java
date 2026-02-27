@@ -1,48 +1,42 @@
 package com.example.books_api.services;
 
 import com.example.books_api.config.SecurityService;
-import com.example.books_api.dtos.ApiResponse;
 import com.example.books_api.dtos.BookDto;
+import com.example.books_api.dtos.BookResponseDto;
+import com.example.books_api.dtos.UpdateBookDto;
 import com.example.books_api.entities.Book;
+import com.example.books_api.entities.BookFile;
 import com.example.books_api.entities.User;
+import com.example.books_api.exceptions.BookNotFoundException;
+import com.example.books_api.exceptions.UserNotFoundException;
 import com.example.books_api.mapper.BookMapper;
 import com.example.books_api.respsitories.BookRepository;
 import com.example.books_api.respsitories.UserRepository;
-import org.junit.jupiter.api.AfterEach;
+import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.ArrayList;
 import java.util.Optional;
 
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class BookServiceTest {
-
-//    @AfterEach
-//    void clearSecurityContext() {
-//        SecurityContextHolder.clearContext();
-//    }
-
-
+    // this Book Service Test is focused on CRUD + Purchase
     @Mock
     private BookRepository bookRepository;
-
     @Mock
     private UserRepository userRepository;
 
@@ -53,6 +47,8 @@ class BookServiceTest {
     private BookService bookService;
 
     @Mock
+    private FileStorageService fileStorageService;
+    @Mock
     private SecurityService securityService;
 
 
@@ -61,17 +57,19 @@ class BookServiceTest {
     void shouldAddBookSuccessfully() {
         // Adding book
         BookDto dto = new BookDto("Spring", "John", 1990,
+                120, 20.0, "descrption ...");
+
+        Book book = new Book(dto);
+
+        BookResponseDto savedDto = new BookResponseDto(1L, "Spring", "John", 1990,
                 120, 20.0, "descrption ...", "book.pdf");
 
-        Book savedBook = new Book(dto);
+        when(bookRepository.save(any(Book.class))).thenReturn(book);
+        when(bookMapper.toResponseDto(book)).thenReturn(savedDto);
 
-        when(bookRepository.save(any(Book.class))).thenReturn(savedBook);
+        BookResponseDto response = bookService.addBook(dto);
 
-        ApiResponse response = bookService.addBook(dto);
-
-
-        assertTrue(response.getError().isEmpty());
-        assertTrue(response.getData().containsKey("New Book"));
+        assertThat(response).isEqualTo(savedDto);
         verify(bookRepository).save(any(Book.class));
     }
 
@@ -92,7 +90,7 @@ class BookServiceTest {
         when(userRepository.findByEmail("test@test.com"))
                 .thenReturn(Optional.empty());
 
-        assertThrows(RuntimeException.class,
+        assertThrows(UserNotFoundException.class,
                 () -> bookService.purchaseBook(1L));
     }
 
@@ -100,21 +98,20 @@ class BookServiceTest {
     void shouldThrowWhenBookNotFound() {
         // not successful purchase - reason: book not found
 
-        String user_email =  "test@test.com";
+        String userEmail =  "test@test.com";
 
         when(securityService.getCurrentUserEmail())
-                .thenReturn(user_email);
+                .thenReturn(userEmail);
 
         User user = new User();
         user.setPurchasedBooks(new ArrayList<>());
 
-        when(userRepository.findByEmail(user_email))
-                .thenReturn(Optional.of(user));
+        when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(user));
 
         when(bookRepository.findById(1L))
                 .thenReturn(Optional.empty());
 
-        assertThrows(RuntimeException.class,
+        assertThrows(BookNotFoundException.class,
                 () -> bookService.purchaseBook(1L));
     }
 
@@ -122,196 +119,128 @@ class BookServiceTest {
     @Test
     void shouldPurchaseBookSuccessfully() {
         // successful purchase
-        String user_email =  "test@test.com";
+        Long bookId = 1L;
+        String userEmail =  "test@test.com";
         when(securityService.getCurrentUserEmail())
-                .thenReturn(user_email);
+                .thenReturn(userEmail);
 
         User user = new User();
         user.setPurchasedBooks(new ArrayList<>());
 
         Book book = new Book();
-        book.setId(1L);
+        book.setId(bookId);
 
-        when(userRepository.findByEmail(user_email))
-                .thenReturn(Optional.of(user));
+        BookResponseDto responseDto = new BookResponseDto();
+        responseDto.setId(bookId);
 
-        when(bookRepository.findById(1L))
-                .thenReturn(Optional.of(book));
+        when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(user));
+        when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
+        when(bookMapper.toResponseDto(book)).thenReturn(responseDto);
 
-        ApiResponse response = bookService.purchaseBook(1L);
+        BookResponseDto response = bookService.purchaseBook(bookId);
 
-        assertTrue(response.getError().isEmpty());
-        assertTrue(response.getData().containsKey("book purchased "));
+
+        assertThat(response).isEqualTo(responseDto);
         assertEquals(1, user.getPurchasedBooks().size());
 
         verify(userRepository).save(user);
     }
 
 
-
     // =================== update book ============================================================
-    // update book
     @Test
     void shouldUpdateBookSuccessfully() {
+        Long bookId = 1L;
         Book book = new Book();
-        BookDto dto = new BookDto("Updated", "Author", 1990,
-                120, 200.0, "descrption ...", "book.pdf");
+        book.setId(bookId);
 
-        when(bookRepository.findById(1L))
-                .thenReturn(Optional.of(book));
+        UpdateBookDto dto = new UpdateBookDto("Updated", "Author", 1990,
+                120, 200.0, "description ...");
 
-        when(bookRepository.save(book))
-                .thenReturn(book);
+        BookResponseDto responseDto = new BookResponseDto(bookId, "Updated", "Author", 1990,
+                120, 200.0, "description ...", "book.pdf");
 
-        ApiResponse response = bookService.updateBook(1L, dto);
+        when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
+        when(bookRepository.save(book)).thenReturn(book);
+        when(bookMapper.toResponseDto(book)).thenReturn(responseDto);
 
-        assertTrue(response.getError().isEmpty());
-        assertTrue(response.getData().containsKey("updated book"));
+        BookResponseDto  response = bookService.updateBook(1L, dto);
+
+        assertThat(response).isEqualTo(responseDto);
 
         verify(bookMapper).updateBookFromDto(dto, book);
+        verify(bookRepository).save(book);
     }
 
 
     @Test
     void shouldReturnErrorWhenUpdatingMissingBook() {
-        when(bookRepository.findById(1L))
-                .thenReturn(Optional.empty());
+        when(bookRepository.findById(1L)).thenReturn(Optional.empty());
 
-        ApiResponse response =
-                bookService.updateBook(1L, new BookDto());
-
-        assertTrue(response.getData().isEmpty());
-        assertTrue(response.getError().containsKey("id"));
+        assertThatThrownBy(() -> bookService.updateBook(1L, new UpdateBookDto()))
+                .isInstanceOf(BookNotFoundException.class);
     }
 
 
     // =================== delete book ============================================================
     @Test
     void shouldDeleteBookSuccessfully() {
+        // without book file
+        // Given
+        Long bookId = 1L;
         Book book = new Book();
+        book.setId(bookId);
+        book.setBookFile(null);
 
-        when(bookRepository.findById(1L))
+        BookResponseDto bookResponseDto = new BookResponseDto();
+
+        when(bookRepository.findById(bookId))
                 .thenReturn(Optional.of(book));
+        when(bookMapper.toResponseDto(book)).thenReturn(bookResponseDto);
 
-        ApiResponse response =
-                bookService.deleteBookById(1L);
+        // When
+        BookResponseDto response = bookService.deleteBookById(1L);
 
-        assertTrue(response.getError().isEmpty());
-        assertTrue(response.getData().containsKey("deleted book"));
+        // Then
+        assertThat(response).isEqualTo(bookResponseDto);
 
         verify(bookRepository).deleteById(1L);
+        verify(fileStorageService, never()).deleteFile(any());
     }
 
     @Test
-    void shouldReturnErrorWhenDeletingMissingBook() {
-        when(bookRepository.findById(1L))
-                .thenReturn(Optional.empty());
-
-        ApiResponse response =
-                bookService.deleteBookById(1L);
-
-        assertTrue(response.getData().isEmpty());
-        assertTrue(response.getError().containsKey("id"));
-    }
-
-
-    // =================== Download ============================================================
-    @Test
-    void shouldThrowWhenDownloadingAndUserNotFound() {
-        // not successful download - reason: user not found
-
-        String user_email =  "test@test.com";
-        when(securityService.getCurrentUserEmail())
-                .thenReturn(user_email);
-
-      //  mockAuthenticatedUser("missing@test.com");
-
-        when(userRepository.findByEmail(user_email))
-                .thenReturn(Optional.empty());
-
-        assertThrows(Exception.class,
-                () -> bookService.downloadBook(1L));
-    }
-
-    @Test
-    void shouldThrowWhenDownloadingAndBookNotFound() {
-        // not successful download - reason: book not found
-      //  mockAuthenticatedUser("test@test.com");
-        String user_email =  "test@test.com";
-        when(securityService.getCurrentUserEmail())
-                .thenReturn(user_email);
-
-        User user = new User();
-        user.setPurchasedBooks(new ArrayList<>());
-
-        when(userRepository.findByEmail(user_email))
-                .thenReturn(Optional.of(user));
-
-        when(bookRepository.findById(1L))
-                .thenReturn(Optional.empty());
-
-        assertThrows(Exception.class,
-                () -> bookService.downloadBook(1L));
-    }
-
-    @Test
-    void shouldReturnForbiddenWhenBookNotPurchased() {
-        // not successful download - reason: book not purchased
-      //  mockAuthenticatedUser("test@test.com");
-        String user_email =  "test@test.com";
-        when(securityService.getCurrentUserEmail())
-                .thenReturn(user_email);
-
-        User user = new User();
-        user.setPurchasedBooks(new ArrayList<>());
-
+    void shouldDeleteBookAndPhysicalFileIfExists(){
+        // Given
+        Long bookId = 1L;
+        String filePath = "path/my_book.pdf";
         Book book = new Book();
-        book.setId(1L);
-        book.setBookFileName("file.pdf");
+        book.setId(bookId);
 
-        when(userRepository.findByEmail(user_email))
-                .thenReturn(Optional.of(user));
+        BookFile bookFile = new BookFile();
+        bookFile.setFilePath(filePath);
+        book.setBookFile(bookFile);
 
-        when(bookRepository.findById(1L))
-                .thenReturn(Optional.of(book));
+        BookResponseDto responseDto = new BookResponseDto();
 
-        var response = bookService.downloadBook(1L);
+        when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
+        when(bookMapper.toResponseDto(book))
+                .thenReturn(responseDto);
 
-        assertEquals(403, response.getStatusCode().value());
-        assertTrue(response.getBody()
-                .contains("You must purchase"));
+        // When
+        BookResponseDto result = bookService.deleteBookById(bookId);
+
+        // Then
+        verify(fileStorageService).deleteFile(filePath);
+        verify(bookRepository).deleteById(bookId);
+        assertThat(result).isEqualTo(responseDto);
     }
 
     @Test
-    void shouldDownloadBookSuccessfully() {
-        // Successful download
-      ///////////  mockAuthenticatedUser("test@test.com");
-        String user_email =  "test@test.com";
-        when(securityService.getCurrentUserEmail())
-                .thenReturn(user_email);
-
-        Book book = new Book();
-        book.setId(1L);
-        book.setBookFileName("spring.pdf");
-
-        User user = new User();
-        user.setPurchasedBooks(new ArrayList<>());
-        user.getPurchasedBooks().add(book);
-
-        when(userRepository.findByEmail(user_email))
-                .thenReturn(Optional.of(user));
-
+    void shouldThrowIfBookNotFoundForDelete() { // shouldReturnErrorWhenDeletingMissingBook()
         when(bookRepository.findById(1L))
-                .thenReturn(Optional.of(book));
+                .thenReturn(Optional.empty());
 
-        var response = bookService.downloadBook(1L);
-
-        assertEquals(200, response.getStatusCode().value());
-        assertTrue(response.getBody()
-                .contains("Access Granted"));
+        assertThatThrownBy(() -> bookService.deleteBookById(1L))
+                .isInstanceOf(BookNotFoundException.class);
     }
-
-
-
-
 }

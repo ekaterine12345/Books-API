@@ -22,17 +22,25 @@ public class Book extends BaseEntity<Long> {
     @SequenceGenerator(name="bookSeqId", sequenceName = "BOOK_ID_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator ="bookSeqId")
     private Long id;
+
+    @Column(nullable = false)
     private String title;
+    @Column(nullable = false)
     private String author;
     @Column(name = "publish_year")
     private Integer publishYear;
 
     @Column(name = "page_number")
     private Integer pageNumber; // number of pages in a book
+    @Column(nullable = false)
     private Double price;
     private String description;
 
-    private String bookFileName;
+ //   private String bookFileName;
+
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "file_id")
+    private BookFile bookFile;
 
     @ManyToMany(mappedBy = "purchasedBooks")
     @JsonIgnore
@@ -45,7 +53,6 @@ public class Book extends BaseEntity<Long> {
         this.pageNumber = bookDto.getPageNumber();
         this.price = bookDto.getPrice();
         this.description = bookDto.getDescription();
-        this.bookFileName = bookDto.getBookFileName();
     }
 
 

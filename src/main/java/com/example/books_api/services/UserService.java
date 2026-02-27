@@ -1,6 +1,8 @@
 package com.example.books_api.services;
 
 import com.example.books_api.config.SecurityService;
+import com.example.books_api.dtos.BookResponseDto;
+import com.example.books_api.exceptions.UserNotFoundException;
 import com.example.books_api.mapper.BookMapper;
 import com.example.books_api.dtos.ApiResponse;
 import com.example.books_api.dtos.BookDto;
@@ -31,14 +33,14 @@ public class UserService {
         this.securityService = securityService;
     }
 
-    public ApiResponse getPurchasedBooks() {
+    public ApiResponse getPurchasedBooks() {  // TODO: return DTOs
         // 1. Get current user
         String email = securityService.getCurrentUserEmail();
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        List<BookDto>  purchasedBooks = user.getPurchasedBooks()
-                .stream().map(bookMapper::toDto).collect(Collectors.toList());
+        List<BookResponseDto>  purchasedBooks = user.getPurchasedBooks()
+                .stream().map(bookMapper::toResponseDto).collect(Collectors.toList());
         return new ApiResponse(user.getFirstname() + "'s purchased books", purchasedBooks);
     }
 }

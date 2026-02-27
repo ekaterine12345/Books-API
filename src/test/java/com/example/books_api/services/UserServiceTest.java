@@ -2,21 +2,18 @@ package com.example.books_api.services;
 
 import com.example.books_api.config.SecurityService;
 import com.example.books_api.dtos.ApiResponse;
-import com.example.books_api.dtos.BookDto;
+import com.example.books_api.dtos.BookResponseDto;
 import com.example.books_api.entities.Book;
 import com.example.books_api.entities.User;
+import com.example.books_api.exceptions.UserNotFoundException;
 import com.example.books_api.mapper.BookMapper;
 import com.example.books_api.respsitories.BookRepository;
 import com.example.books_api.respsitories.UserRepository;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,12 +43,11 @@ class UserServiceTest {
     // ==================   PurchasedBooks - Success =======================================
     @Test
     void shouldReturnPurchasedBooksSuccessfully() {
+        // Given
+        String userEmail = "jane@test.com";
+        String firstName = "Jane";
 
-        String user_email = "user@test.com";
-        String user_firstName = "Jane";
-
-        when(securityService.getCurrentUserEmail())
-                .thenReturn(user_email);
+        when(securityService.getCurrentUserEmail()).thenReturn(userEmail);
 
         Book book1 = new Book();
         book1.setId(1L);
@@ -60,42 +56,43 @@ class UserServiceTest {
         book2.setId(2L);
 
         User user = new User();
-        user.setFirstname(user_firstName);
+        user.setFirstname(firstName);
         user.setPurchasedBooks(new ArrayList<>(List.of(book1, book2)));
 
-        when(userRepository.findByEmail(user_email))
-                .thenReturn(Optional.of(user));
+        when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(user));
 
-        when(bookMapper.toDto(book1)).thenReturn(new BookDto());
-        when(bookMapper.toDto(book2)).thenReturn(new BookDto());
+        when(bookMapper.toResponseDto(book1)).thenReturn(new BookResponseDto());
+        when(bookMapper.toResponseDto(book2)).thenReturn(new BookResponseDto());
 
+        // When
         ApiResponse response = userService.getPurchasedBooks();
 
         assertTrue(response.getError().isEmpty());
-        assertTrue(response.getData().containsKey(user_firstName+"'s purchased books"));
+        assertTrue(response.getData().containsKey(firstName+"'s purchased books"));
 
         List<?> books = (List<?>) response.getData()
-                .get(user_firstName+"'s purchased books");
+                .get(firstName+"'s purchased books");
 
+        // Then
         assertEquals(2, books.size());
 
-        verify(userRepository).findByEmail(user_email);
-        verify(bookMapper, times(2)).toDto(any(Book.class));
+        verify(userRepository).findByEmail(userEmail);
+        verify(bookMapper, times(2)).toResponseDto(any(Book.class));
     }
 
     // ==================   PurchasedBooks NOT Success - user not found =======================================
     @Test
     void shouldThrowExceptionWhenUserNotFound() {
-        String user_email = "missing@test.com";
+        String useEmail = "missing@test.com";
 
         when(securityService.getCurrentUserEmail())
-                .thenReturn(user_email);
+                .thenReturn(useEmail);
 
-        when(userRepository.findByEmail(user_email))
+        when(userRepository.findByEmail(useEmail))
                 .thenReturn(Optional.empty());
 
         RuntimeException exception = assertThrows(
-                RuntimeException.class,
+                UserNotFoundException.class,
                 () -> userService.getPurchasedBooks()
         );
 
@@ -105,31 +102,29 @@ class UserServiceTest {
     // ==================   PurchasedBooks  - purchase list is empty =======================================
     @Test
     void shouldReturnEmptyListWhenUserHasNoPurchasedBooks() {
-        String user_email = "user@test.com";
-        String user_firstName = "Anna";
-
-    ///    mockAuthenticatedUser(user_email);
+        String userEmail = "user@test.com";
+        String firstName = "Anna";
 
         when(securityService.getCurrentUserEmail())
-                .thenReturn(user_email);
+                .thenReturn(userEmail);
 
         User user = new User();
-        user.setFirstname(user_firstName);
+        user.setFirstname(firstName);
         user.setPurchasedBooks(new ArrayList<>());
 
-        when(userRepository.findByEmail(user_email))
+        when(userRepository.findByEmail(userEmail))
                 .thenReturn(Optional.of(user));
 
         ApiResponse response = userService.getPurchasedBooks();
 
         assertTrue(response.getError().isEmpty());
-        assertTrue(response.getData().containsKey(user_firstName+"'s purchased books"));
+        assertTrue(response.getData().containsKey(firstName +"'s purchased books"));
 
         List<?> books = (List<?>) response.getData()
-                .get(user_firstName + "'s purchased books");
+                .get(firstName + "'s purchased books");
 
         assertTrue(books.isEmpty());
 
-        verify(bookMapper, never()).toDto(any());
+        verify(bookMapper, never()).toResponseDto(any());
     }
 }

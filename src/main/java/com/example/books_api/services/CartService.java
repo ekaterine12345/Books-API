@@ -8,6 +8,8 @@ import com.example.books_api.entities.Book;
 import com.example.books_api.entities.Cart;
 import com.example.books_api.entities.CartItem;
 import com.example.books_api.entities.User;
+import com.example.books_api.exceptions.BookNotFoundException;
+import com.example.books_api.exceptions.UserNotFoundException;
 import com.example.books_api.respsitories.BookRepository;
 import com.example.books_api.respsitories.CartRepository;
 import com.example.books_api.respsitories.UserRepository;
@@ -30,15 +32,15 @@ public class CartService {
     private final SecurityService securityService;
 
 
-    public ApiResponse addToCart(Long bookId) {
+    public ApiResponse addToCart(Long bookId) {  // TODO: return DTOs
         // 1. Get current user
         String email = securityService.getCurrentUserEmail();   // SecurityContextHolder.getContext().getAuthentication().getName();
 
         Cart cart = cartRepository.findByUserEmail(email)
-                .orElseThrow(() -> new RuntimeException("Cart was not found"));
+                .orElseThrow(() -> new UserNotFoundException("Cart was not found"));
 
         Book book = bookRepository.findById(bookId)
-                .orElseThrow(() -> new RuntimeException("Book was not found"));
+                .orElseThrow(() -> new BookNotFoundException("Book was not found"));
 
         boolean alreadyPurchased = cart.getUser().getPurchasedBooks().contains(book);
 
@@ -134,6 +136,6 @@ public class CartService {
         userRepository.save(user);
         cartRepository.save(cart);
 
-        return new ApiResponse("Purchase sucess", user.getPurchasedBooks());
+        return new ApiResponse("Purchase success", user.getPurchasedBooks());
     }
 }
