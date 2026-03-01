@@ -1,15 +1,14 @@
 package com.example.books_api.services;
 
 import com.example.books_api.config.SecurityService;
-import com.example.books_api.dtos.BookDto;
-import com.example.books_api.dtos.BookResponseDto;
+import com.example.books_api.dtos.book.BookResponseDto;
 import com.example.books_api.dtos.FileDownloadDto;
 import com.example.books_api.entities.Book;
 import com.example.books_api.entities.BookFile;
 import com.example.books_api.entities.User;
-import com.example.books_api.exceptions.BookAccessDeniedException;
-import com.example.books_api.exceptions.BookNotFoundException;
-import com.example.books_api.exceptions.UserNotFoundException;
+import com.example.books_api.exceptions.book.BookAccessDeniedException;
+import com.example.books_api.exceptions.book.BookNotFoundException;
+import com.example.books_api.exceptions.user.UserNotFoundException;
 import com.example.books_api.mapper.BookMapper;
 import com.example.books_api.respsitories.BookRepository;
 import com.example.books_api.respsitories.UserRepository;
@@ -31,8 +30,6 @@ import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Optional;
 
-
-import static org.mockito.ArgumentMatchers.any;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;

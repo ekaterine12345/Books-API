@@ -2,12 +2,11 @@ package com.example.books_api.services;
 
 import org.springframework.stereotype.Service;
 
-import com.example.books_api.exceptions.FileNotFoundException;
-import com.example.books_api.exceptions.FileStorageException;
+import com.example.books_api.exceptions.files.FileNotFoundException;
+import com.example.books_api.exceptions.files.FileStorageException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
-import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 

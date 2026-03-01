@@ -4,7 +4,6 @@ import com.example.books_api.dtos.ApiResponse;
 import com.example.books_api.services.CartService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -26,16 +25,15 @@ public class CartController {
     @GetMapping
     public ApiResponse getAllCart() {
 
-        return cartService.getAllCart();
+        return new ApiResponse("cart", cartService.getAllCart());
     }
-
 
 
     @PreAuthorize("hasRole('USER')")
     @PostMapping("/add/{bookId}")
     public ApiResponse addToCart(@PathVariable Long bookId) {
 
-        return cartService.addToCart(bookId);
+        return new ApiResponse("Book added to cart", cartService.addToCart(bookId));
     }
 
     @PreAuthorize("hasRole('USER')")

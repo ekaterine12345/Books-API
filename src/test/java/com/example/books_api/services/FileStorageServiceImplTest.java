@@ -1,12 +1,10 @@
 package com.example.books_api.services;
 
-import com.example.books_api.exceptions.FileNotFoundException;
-import com.example.books_api.exceptions.FileStorageException;
+import com.example.books_api.exceptions.files.FileNotFoundException;
+import com.example.books_api.exceptions.files.FileStorageException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.Resource;
 import org.springframework.mock.web.MockMultipartFile;
 
@@ -18,7 +16,6 @@ import java.nio.file.Paths;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.verify;
 
 

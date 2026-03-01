@@ -1,4 +1,4 @@
-package com.example.books_api.dtos;
+package com.example.books_api.dtos.book;
 
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
@@ -10,11 +10,13 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class UpdateBookDto {
-
+public class BookDto {
+    // Create DTO (adding records)
+    @NotBlank(message = "title is required")
     @Size(min = 2, max = 100, message = "Title must be between 2 and 100 characters")
     private String title;
 
+    @NotBlank(message = "author is required")
     @Size(min = 2, max = 100, message = "Author must be between 2 and 100 characters")
     private String author;
 
@@ -23,8 +25,9 @@ public class UpdateBookDto {
     private Integer publishYear;
 
     @Positive(message = "Page number must be positive")
-    private Integer pageNumber;
+    private Integer pageNumber; // number of pages in a book
 
+    @NotNull(message = "price is mandatory")
     @Positive(message = "Price must be greater than 0")
     private Double price;
 

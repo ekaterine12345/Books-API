@@ -1,4 +1,4 @@
-package com.example.books_api.exceptions;
+package com.example.books_api.exceptions.files;
 
 public class FileStorageException extends RuntimeException{
 

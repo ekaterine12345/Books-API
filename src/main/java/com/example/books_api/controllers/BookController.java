@@ -1,8 +1,8 @@
 package com.example.books_api.controllers;
 
 import com.example.books_api.dtos.ApiResponse;
-import com.example.books_api.dtos.BookDto;
-import com.example.books_api.dtos.UpdateBookDto;
+import com.example.books_api.dtos.book.BookDto;
+import com.example.books_api.dtos.book.UpdateBookDto;
 import com.example.books_api.services.BookService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;

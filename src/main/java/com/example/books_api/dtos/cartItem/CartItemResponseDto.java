@@ -1,4 +1,4 @@
-package com.example.books_api.dtos;
+package com.example.books_api.dtos.cartItem;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

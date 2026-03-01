@@ -1,16 +1,14 @@
 package com.example.books_api.services;
 
 import com.example.books_api.config.SecurityService;
-import com.example.books_api.dtos.BookResponseDto;
-import com.example.books_api.exceptions.UserNotFoundException;
+import com.example.books_api.dtos.book.BookResponseDto;
+import com.example.books_api.exceptions.user.UserNotFoundException;
 import com.example.books_api.mapper.BookMapper;
 import com.example.books_api.dtos.ApiResponse;
-import com.example.books_api.dtos.BookDto;
 import com.example.books_api.entities.User;
 import com.example.books_api.respsitories.BookRepository;
 import com.example.books_api.respsitories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

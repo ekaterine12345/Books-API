@@ -1,6 +1,6 @@
 package com.example.books_api.entities;
 
-import com.example.books_api.dtos.BookDto;
+import com.example.books_api.dtos.book.BookDto;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
@@ -36,8 +36,6 @@ public class Book extends BaseEntity<Long> {
     private Double price;
     private String description;
 
- //   private String bookFileName;
-
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "file_id")
     private BookFile bookFile;
@@ -53,7 +51,7 @@ public class Book extends BaseEntity<Long> {
         this.pageNumber = bookDto.getPageNumber();
         this.price = bookDto.getPrice();
         this.description = bookDto.getDescription();
-    }
+    } // TODO: delete this
 
 
     @Override

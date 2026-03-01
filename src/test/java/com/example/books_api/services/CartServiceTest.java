@@ -2,8 +2,16 @@ package com.example.books_api.services;
 
 import com.example.books_api.config.SecurityService;
 import com.example.books_api.dtos.ApiResponse;
+import com.example.books_api.dtos.book.BookResponseDto;
 import com.example.books_api.dtos.CartResponseDto;
+import com.example.books_api.dtos.cartItem.CartItemResponseDto;
 import com.example.books_api.entities.*;
+import com.example.books_api.exceptions.cart.CartNotFoundException;
+import com.example.books_api.exceptions.book.BookAlreadyInCartException;
+import com.example.books_api.exceptions.book.BookAlreadyPurchasedException;
+import com.example.books_api.exceptions.cart.EmptyCartException;
+import com.example.books_api.mapper.BookMapper;
+import com.example.books_api.mapper.CartItemMapper;
 import com.example.books_api.respsitories.BookRepository;
 import com.example.books_api.respsitories.CartRepository;
 import com.example.books_api.respsitories.UserRepository;
@@ -17,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -28,6 +37,12 @@ class CartServiceTest {
 
     @Mock
     private BookRepository bookRepository;
+
+    @Mock
+    private BookMapper bookMapper;
+
+    @Mock
+    private CartItemMapper cartItemMapper;
 
     @Mock
     private UserRepository userRepository;
@@ -44,7 +59,7 @@ class CartServiceTest {
 
     @Test
     void shouldAddBookToCartSuccessfully() {
-
+        // Given
         when(securityService.getCurrentUserEmail()).thenReturn(email);
 
         User user = new User();
@@ -57,15 +72,19 @@ class CartServiceTest {
         Book book = new Book();
         book.setId(1L);
 
+        BookResponseDto savedDto = new BookResponseDto();
+
         when(cartRepository.findByUserEmail(email)).thenReturn(Optional.of(cart));
         when(bookRepository.findById(1L)).thenReturn(Optional.of(book));
+        when(bookMapper.toResponseDto(any(Book.class)))
+                .thenReturn(savedDto);
 
-        ApiResponse response = cartService.addToCart(1L);
+        // When
+        BookResponseDto response = cartService.addToCart(1L);
 
-        assertTrue(response.getError().isEmpty());
-        assertTrue(response.getData().containsKey("Book added to cart"));
+        // Then
+        assertThat(response).isEqualTo(savedDto);
         assertEquals(1, cart.getItems().size());
-
         verify(cartRepository).save(cart);
     }
 
@@ -75,13 +94,13 @@ class CartServiceTest {
         when(securityService.getCurrentUserEmail()).thenReturn(email);
         when(cartRepository.findByUserEmail(email)).thenReturn(Optional.empty());
 
-        assertThrows(RuntimeException.class,
+        assertThrows(CartNotFoundException.class,
                 () -> cartService.addToCart(1L));
     }
 
     @Test
     void shouldThrowWhenBookAlreadyInCart() {
-
+        // Given
         when(securityService.getCurrentUserEmail()).thenReturn(email);
 
         Book book = new Book();
@@ -101,9 +120,9 @@ class CartServiceTest {
         when(bookRepository.findById(1L)).thenReturn(Optional.of(book));
 
 
-
+        // When, Then
         RuntimeException exception = assertThrows(
-                RuntimeException.class,
+                BookAlreadyInCartException.class,
                 () -> cartService.addToCart(1L)
         );
         assertEquals("Book already in cart", exception.getMessage());
@@ -111,7 +130,7 @@ class CartServiceTest {
 
     @Test
     void shouldThrowWhenBookAlreadyPurchased() {
-
+        // Given
         when(securityService.getCurrentUserEmail()).thenReturn(email);
 
         Book book = new Book();
@@ -131,9 +150,9 @@ class CartServiceTest {
         when(bookRepository.findById(1L)).thenReturn(Optional.of(book));
 
 
-
+        // When. Then
         RuntimeException exception = assertThrows(
-                RuntimeException.class,
+                BookAlreadyPurchasedException.class,
                 () -> cartService.addToCart(1L)
         );
         assertEquals("that book is already purchased", exception.getMessage());
@@ -144,7 +163,7 @@ class CartServiceTest {
 
     @Test
     void shouldDeleteFromCartSuccessfully() {
-
+        // Given
         when(securityService.getCurrentUserEmail()).thenReturn(email);
 
         Book book = new Book();
@@ -158,8 +177,10 @@ class CartServiceTest {
 
         when(cartRepository.findByUserEmail(email)).thenReturn(Optional.of(cart));
 
+        // When
         ApiResponse response = cartService.deleteFromCart(1L);
 
+        // Then
         assertEquals(0, cart.getItems().size());
         assertTrue(response.getData().containsKey("Book removed from cart with id"));
         verify(cartRepository).save(cart);
@@ -199,11 +220,11 @@ class CartServiceTest {
                 .thenReturn(Optional.empty());
 
         RuntimeException exception = assertThrows(
-                RuntimeException.class,
+                CartNotFoundException.class,
                 () -> cartService.deleteFromCart(1L)
         );
 
-        assertEquals("Cart not found", exception.getMessage());
+        assertEquals("Cart not found for user: " + email, exception.getMessage());
 
         verify(cartRepository, never()).save(any());
     }
@@ -232,7 +253,7 @@ class CartServiceTest {
 
     @Test
     void shouldReturnAllCartItems() {
-
+        // Given
         when(securityService.getCurrentUserEmail()).thenReturn(email);
 
         Book book = new Book();
@@ -249,20 +270,20 @@ class CartServiceTest {
         cart.setId(10L);
         cart.setItems(new ArrayList<>(List.of(item)));
 
+        CartItemResponseDto itemDto = new CartItemResponseDto(1L, "Spring", "John", 20.0);
+
         when(cartRepository.findByUserEmail(email))
                 .thenReturn(Optional.of(cart));
 
-        ApiResponse response = cartService.getAllCart();
+        when(cartItemMapper.toResponseDto(item)).thenReturn(itemDto);
 
-        assertTrue(response.getError().isEmpty());
-        assertTrue(response.getData().containsKey("cart"));
+        // When
+        CartResponseDto responseDto = cartService.getAllCart();
 
-        CartResponseDto dto =
-                (CartResponseDto) response.getData().get("cart");
-
-        assertEquals(10L, dto.getCartId());
-        assertEquals(1, dto.getItems().size());
-        assertEquals(20.0, dto.getTotalPrice());
+        // Then
+        assertEquals(10L, responseDto.getCartId());
+        assertEquals(1, responseDto.getItems().size());
+        assertEquals(20.0, responseDto.getTotalPrice());
     }
 
 
@@ -270,7 +291,7 @@ class CartServiceTest {
 
     @Test
     void shouldPurchaseFromCartSuccessfully() {
-
+        // Given
         when(securityService.getCurrentUserEmail()).thenReturn(email);
 
         Book book = new Book();
@@ -278,18 +299,25 @@ class CartServiceTest {
 
         CartItem item = CartItem.builder().book(book).build();
 
+
+        User user = new User();
+        user.setId(1L);
+        user.setPurchasedBooks(new ArrayList<>());
+
+
         Cart cart = new Cart();
         cart.setItems(new ArrayList<>());
         cart.getItems().add(item);
+        cart.setUser(user);
 
-        User user = new User();
-        user.setPurchasedBooks(new ArrayList<>());
-
-        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
         when(cartRepository.findByUserEmail(email)).thenReturn(Optional.of(cart));
+        when(bookMapper.toResponseDto(any(Book.class)))
+                .thenReturn(new BookResponseDto());
 
+        // When
         ApiResponse response = cartService.purchaseFromCart();
 
+        // Then
         assertEquals(1, user.getPurchasedBooks().size());
         assertTrue(cart.getItems().isEmpty());
 
@@ -299,19 +327,20 @@ class CartServiceTest {
 
     @Test
     void shouldThrowWhenCartEmpty() {
-
+        // Given
         when(securityService.getCurrentUserEmail()).thenReturn(email);
-
-        Cart cart = new Cart();
-        cart.setItems(new ArrayList<>());
 
         User user = new User();
         user.setPurchasedBooks(new ArrayList<>());
 
-        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+
+        Cart cart = new Cart();
+        cart.setItems(new ArrayList<>());
+        cart.setUser(user);
+
         when(cartRepository.findByUserEmail(email)).thenReturn(Optional.of(cart));
 
-        assertThrows(RuntimeException.class,
-                () -> cartService.purchaseFromCart());
+        // When, Then
+        assertThrows(EmptyCartException.class, () -> cartService.purchaseFromCart());
     }
 }

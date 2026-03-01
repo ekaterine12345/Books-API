@@ -1,30 +1,28 @@
 package com.example.books_api.services;
 
 import com.example.books_api.config.SecurityService;
-import com.example.books_api.dtos.BookDto;
-import com.example.books_api.dtos.BookResponseDto;
+import com.example.books_api.dtos.book.BookDto;
+import com.example.books_api.dtos.book.BookResponseDto;
 import com.example.books_api.dtos.FileDownloadDto;
-import com.example.books_api.dtos.UpdateBookDto;
+import com.example.books_api.dtos.book.UpdateBookDto;
 import com.example.books_api.entities.Book;
 import com.example.books_api.entities.BookFile;
 import com.example.books_api.entities.User;
-import com.example.books_api.exceptions.BookAccessDeniedException;
-import com.example.books_api.exceptions.BookNotFoundException;
-import com.example.books_api.exceptions.UserNotFoundException;
+import com.example.books_api.exceptions.book.BookAccessDeniedException;
+import com.example.books_api.exceptions.book.BookNotFoundException;
+import com.example.books_api.exceptions.user.UserNotFoundException;
 import com.example.books_api.mapper.BookMapper;
 import com.example.books_api.respsitories.BookRepository;
 import com.example.books_api.respsitories.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service

@@ -84,7 +84,7 @@ public class User extends BaseEntity<Long> implements UserDetails {
             inverseJoinColumns = @JoinColumn(name = "book_id"))
     @JsonIgnore
     @Builder.Default
-    private List<Book> purchasedBooks = new ArrayList<>();
+    private List<Book> purchasedBooks = new ArrayList<>(); // TODO change to set
 
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
