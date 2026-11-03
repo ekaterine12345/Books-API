@@ -1,4 +1,4 @@
-package com.example.books_api.controllers;
+package com.example.books_api.controller;
 
 
 import com.example.books_api.dto.ApiResponse;
