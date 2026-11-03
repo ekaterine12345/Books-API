@@ -1,6 +1,6 @@
 package com.example.books_api.entities;
 
-import com.example.books_api.dtos.book.BookDto;
+import com.example.books_api.dto.book.BookDto;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
@@ -25,24 +25,28 @@ public class Book extends BaseEntity<Long> {
 
     @Column(nullable = false)
     private String title;
+
     @Column(nullable = false)
     private String author;
+
     @Column(name = "publish_year")
     private Integer publishYear;
 
     @Column(name = "page_number")
     private Integer pageNumber; // number of pages in a book
+
     @Column(nullable = false)
     private Double price;
+
     private String description;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "file_id")
     private BookFile bookFile;
 
-    @ManyToMany(mappedBy = "purchasedBooks")
+    @OneToMany(mappedBy = "book")
     @JsonIgnore
-    private List<User> buyers = new ArrayList<>();
+    private List<Purchase> purchases = new ArrayList<>();
 
     public Book(BookDto bookDto) {
         this.title = bookDto.getTitle();

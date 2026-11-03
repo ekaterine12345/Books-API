@@ -1,10 +1,10 @@
 package com.example.books_api.services;
 
 import com.example.books_api.config.SecurityService;
-import com.example.books_api.dtos.book.BookDto;
-import com.example.books_api.dtos.book.BookResponseDto;
-import com.example.books_api.dtos.FileDownloadDto;
-import com.example.books_api.dtos.book.UpdateBookDto;
+import com.example.books_api.dto.book.BookDto;
+import com.example.books_api.dto.book.BookResponseDto;
+import com.example.books_api.dto.FileDownloadDto;
+import com.example.books_api.dto.book.UpdateBookDto;
 import com.example.books_api.entities.Book;
 import com.example.books_api.entities.BookFile;
 import com.example.books_api.entities.User;
@@ -13,6 +13,7 @@ import com.example.books_api.exceptions.book.BookNotFoundException;
 import com.example.books_api.exceptions.user.UserNotFoundException;
 import com.example.books_api.mapper.BookMapper;
 import com.example.books_api.respsitories.BookRepository;
+import com.example.books_api.respsitories.PurchaseRepository;
 import com.example.books_api.respsitories.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,16 +31,18 @@ public class BookService {
     private final BookRepository bookRepository;
     private final BookMapper bookMapper;
     private final UserRepository userRepository;
+    private final PurchaseRepository purchaseRepository;
     private final SecurityService securityService;
     private final FileStorageService fileStorageService;
 
     @Autowired
     public BookService(BookRepository bookRepository, BookMapper bookMapper,
-                       UserRepository userRepository, SecurityService securityService,
-                       FileStorageService fileStorageService) {
+                       UserRepository userRepository, PurchaseRepository purchaseRepository,
+                       SecurityService securityService, FileStorageService fileStorageService) {
         this.bookRepository = bookRepository;
         this.bookMapper = bookMapper;
         this.userRepository = userRepository;
+        this.purchaseRepository = purchaseRepository;
         this.securityService = securityService;
         this.fileStorageService = fileStorageService;
     }
@@ -56,7 +59,7 @@ public class BookService {
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
     }
 
-    
+
     public BookResponseDto addBook(BookDto bookDto) {
         if (bookDto == null) {
             throw new NullPointerException("Book should not be empty!");
@@ -65,18 +68,6 @@ public class BookService {
         Book book = new Book(bookDto);
         Book insertedBook = bookRepository.save(book);
         return bookMapper.toResponseDto(insertedBook);
-    }
-
-    public BookResponseDto purchaseBook(Long bookId) {
-        User user = getCurrentUser();
-        Book book = getBookById(bookId);
-
-        if (!user.getPurchasedBooks().contains(book)) {
-            user.getPurchasedBooks().add(book);
-            userRepository.save(user); // Saving the relationship in the join table
-        }
-
-        return  bookMapper.toResponseDto(book);
     }
 
     public FileDownloadDto downloadBook(Long bookId) throws MalformedURLException {
@@ -88,9 +79,9 @@ public class BookService {
             throw new EntityNotFoundException("book file not found for book id: " + bookId);
         }
 
-        // Check if the user owns this book
-        if (!user.getPurchasedBooks().contains(book))
-             throw new BookAccessDeniedException("You must purchase this book before downloading");
+        // Check if the user owns this book (a single exists-query instead of loading all purchased books)
+        if (!purchaseRepository.existsByUserIdAndBookId(user.getId(), bookId))
+            throw new BookAccessDeniedException("You must purchase this book before downloading");
 
         Resource resource = fileStorageService.loadFileAsResource(bookFile.getFilePath());
         return new FileDownloadDto(resource, bookFile.getFileName(), bookFile.getContentType());

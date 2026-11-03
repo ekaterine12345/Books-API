@@ -1,8 +1,8 @@
 package com.example.books_api.controllers;
 
-import com.example.books_api.dtos.ApiResponse;
-import com.example.books_api.dtos.book.BookDto;
-import com.example.books_api.dtos.book.UpdateBookDto;
+import com.example.books_api.dto.ApiResponse;
+import com.example.books_api.dto.book.BookDto;
+import com.example.books_api.dto.book.UpdateBookDto;
 import com.example.books_api.services.BookService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +36,7 @@ public class BookController {
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ApiResponse addBook(@Valid @RequestBody BookDto bookDto){
-        return  new ApiResponse("New Book", bookService.addBook(bookDto));
+        return new ApiResponse("New Book", bookService.addBook(bookDto));
     }
 
     @PreAuthorize("hasRole('ADMIN')")

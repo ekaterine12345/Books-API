@@ -1,6 +1,6 @@
-package com.example.books_api.dtos;
+package com.example.books_api.dto;
 
-import com.example.books_api.dtos.cartItem.CartItemResponseDto;
+import com.example.books_api.dto.cartItem.CartItemResponseDto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

@@ -3,8 +3,6 @@ package com.example.books_api.entities;
 
 import com.example.books_api.user.Role;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.jetbrains.annotations.Nullable;
-//import org.jspecify.annotations.Nullable;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
@@ -79,12 +77,10 @@ public class User extends BaseEntity<Long> implements UserDetails {
     }
 
 
-    @ManyToMany
-    @JoinTable(name = "user_purchases", joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "book_id"))
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     @Builder.Default
-    private List<Book> purchasedBooks = new ArrayList<>(); // TODO change to set
+    private List<Purchase> purchases = new ArrayList<>();
 
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)

@@ -1,8 +1,8 @@
 package com.example.books_api.mapper;
 
-import com.example.books_api.dtos.book.BookDto;
-import com.example.books_api.dtos.book.BookResponseDto;
-import com.example.books_api.dtos.book.UpdateBookDto;
+import com.example.books_api.dto.book.BookDto;
+import com.example.books_api.dto.book.BookResponseDto;
+import com.example.books_api.dto.book.UpdateBookDto;
 import com.example.books_api.entities.Book;
 import org.mapstruct.*;
 

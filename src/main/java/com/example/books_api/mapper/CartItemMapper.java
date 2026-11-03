@@ -1,6 +1,6 @@
 package com.example.books_api.mapper;
 
-import com.example.books_api.dtos.cartItem.CartItemResponseDto;
+import com.example.books_api.dto.cartItem.CartItemResponseDto;
 import com.example.books_api.entities.CartItem;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

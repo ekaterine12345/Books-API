@@ -1,6 +1,6 @@
 package com.example.books_api.controllers;
 
-import com.example.books_api.dtos.ApiResponse;
+import com.example.books_api.dto.ApiResponse;
 import com.example.books_api.services.CartService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;

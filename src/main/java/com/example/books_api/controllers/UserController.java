@@ -1,6 +1,6 @@
 package com.example.books_api.controllers;
 
-import com.example.books_api.dtos.ApiResponse;
+import com.example.books_api.dto.ApiResponse;
 import com.example.books_api.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;

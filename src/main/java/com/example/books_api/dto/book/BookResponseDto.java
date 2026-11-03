@@ -1,4 +1,4 @@
-package com.example.books_api.dtos.book;
+package com.example.books_api.dto.book;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

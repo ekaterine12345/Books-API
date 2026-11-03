@@ -1,7 +1,7 @@
-package com.example.books_api.controllers;
+package com.example.books_api.exceptions;
 
 
-import com.example.books_api.dtos.ApiResponse;
+import com.example.books_api.dto.ApiResponse;
 import com.example.books_api.exceptions.book.BookAccessDeniedException;
 import com.example.books_api.exceptions.files.FileNotFoundException;
 import com.example.books_api.exceptions.files.FileStorageException;

@@ -1,13 +1,14 @@
 package com.example.books_api.services;
 
 import com.example.books_api.config.SecurityService;
-import com.example.books_api.dtos.ApiResponse;
-import com.example.books_api.dtos.book.BookResponseDto;
-import com.example.books_api.dtos.cartItem.CartItemResponseDto;
-import com.example.books_api.dtos.CartResponseDto;
+import com.example.books_api.dto.ApiResponse;
+import com.example.books_api.dto.book.BookResponseDto;
+import com.example.books_api.dto.cartItem.CartItemResponseDto;
+import com.example.books_api.dto.CartResponseDto;
 import com.example.books_api.entities.Book;
 import com.example.books_api.entities.Cart;
 import com.example.books_api.entities.CartItem;
+import com.example.books_api.entities.Purchase;
 import com.example.books_api.entities.User;
 import com.example.books_api.exceptions.book.BookAlreadyInCartException;
 import com.example.books_api.exceptions.book.BookAlreadyPurchasedException;
@@ -18,16 +19,13 @@ import com.example.books_api.mapper.BookMapper;
 import com.example.books_api.mapper.CartItemMapper;
 import com.example.books_api.respsitories.BookRepository;
 import com.example.books_api.respsitories.CartRepository;
-import com.example.books_api.respsitories.UserRepository;
+import com.example.books_api.respsitories.PurchaseRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -35,7 +33,7 @@ public class CartService {
 
     private final CartRepository cartRepository;
     private final BookRepository bookRepository;
-    private final UserRepository userRepository;
+    private final PurchaseRepository purchaseRepository;
     private final BookMapper bookMapper;
 
     private final SecurityService securityService;
@@ -60,12 +58,12 @@ public class CartService {
         Cart cart = getCartForCurrentUser();
         Book book = getBookById(bookId);
 
-        if (cart.getUser().getPurchasedBooks().contains(book)) {
+        if (purchaseRepository.existsByUserIdAndBookId(cart.getUser().getId(), bookId)) {
             throw new BookAlreadyPurchasedException("that book is already purchased");
         }
 
         boolean alreadyInCart = cart.getItems().stream()
-                        .anyMatch(i -> i.getBook().getId().equals(bookId));
+                .anyMatch(i -> i.getBook().getId().equals(bookId));
 
         if (alreadyInCart) {
             throw new BookAlreadyInCartException("Book already in cart");
@@ -116,7 +114,7 @@ public class CartService {
         double totalPrice = items.stream().mapToDouble(CartItemResponseDto::getPrice).sum();
 
         return new CartResponseDto(cart.getId(), items, totalPrice);
-       // return cartMapper.toResponseDto(getCartForCurrentUser());
+        // return cartMapper.toResponseDto(getCartForCurrentUser());
     }
 
     @Transactional
@@ -130,17 +128,19 @@ public class CartService {
         }
 
         List<BookResponseDto> purchasedBooks = new ArrayList<>();
+        List<Purchase> newPurchases = new ArrayList<>();
 
         for (CartItem cartItem : cart.getItems()){
             Book book = cartItem.getBook();
-            if (!user.getPurchasedBooks().contains(book)) {
+            // skip books the user already owns (same behavior as before)
+            if (!purchaseRepository.existsByUserIdAndBookId(user.getId(), book.getId())) {
+                newPurchases.add(new Purchase(user, book)); // snapshots the current price
                 purchasedBooks.add(bookMapper.toResponseDto(book));
-                user.getPurchasedBooks().add(book);
             }
         }
 
+        purchaseRepository.saveAll(newPurchases);
         cart.getItems().clear();
-        userRepository.save(user);
         cartRepository.save(cart);
 
         return new ApiResponse("Purchase success", purchasedBooks);

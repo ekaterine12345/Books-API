@@ -1,9 +1,9 @@
 package com.example.books_api.services;
 
 import com.example.books_api.config.SecurityService;
-import com.example.books_api.dtos.book.BookDto;
-import com.example.books_api.dtos.book.BookResponseDto;
-import com.example.books_api.dtos.book.UpdateBookDto;
+import com.example.books_api.dto.book.BookDto;
+import com.example.books_api.dto.book.BookResponseDto;
+import com.example.books_api.dto.book.UpdateBookDto;
 import com.example.books_api.entities.Book;
 import com.example.books_api.entities.BookFile;
 import com.example.books_api.entities.User;

@@ -1,6 +1,6 @@
-package com.example.books_api.dtos;
+package com.example.books_api.dto;
 
-import com.example.books_api.dtos.book.BookDto;
+import com.example.books_api.dto.book.BookDto;
 
 import java.util.List;
 

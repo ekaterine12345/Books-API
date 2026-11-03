@@ -1,10 +1,10 @@
 package com.example.books_api.services;
 
 import com.example.books_api.config.SecurityService;
-import com.example.books_api.dtos.ApiResponse;
-import com.example.books_api.dtos.book.BookResponseDto;
-import com.example.books_api.dtos.CartResponseDto;
-import com.example.books_api.dtos.cartItem.CartItemResponseDto;
+import com.example.books_api.dto.ApiResponse;
+import com.example.books_api.dto.book.BookResponseDto;
+import com.example.books_api.dto.CartResponseDto;
+import com.example.books_api.dto.cartItem.CartItemResponseDto;
 import com.example.books_api.entities.*;
 import com.example.books_api.exceptions.cart.CartNotFoundException;
 import com.example.books_api.exceptions.book.BookAlreadyInCartException;
